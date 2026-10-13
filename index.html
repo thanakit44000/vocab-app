@@ -39,7 +39,7 @@
     <style>
         body {
             font-family: 'Prompt', sans-serif;
-            background-color: #f0fdfa; /* Soft cyan background */
+            background-color: #f0fdfa;
             background-image: radial-gradient(#bae6fd 1px, transparent 1px), radial-gradient(#bae6fd 1px, transparent 1px);
             background-size: 40px 40px;
             background-position: 0 0, 20px 20px;
@@ -49,7 +49,6 @@
 
         .mali-font { font-family: 'Mali', cursive; }
 
-        /* Light Glassmorphism Cards */
         .glass-panel {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
@@ -78,7 +77,6 @@
             transform: translateY(-2px);
         }
 
-        /* Utilities */
         .hidden-view { display: none !important; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: rgba(241,245,249,1); border-radius: 10px; }
@@ -90,7 +88,6 @@
             to { opacity: 1; transform: scale(1) translateY(0); }
         }
 
-        /* 3D Flip Card Styles */
         .flip-card {
             background-color: transparent;
             width: 100%;
@@ -131,7 +128,6 @@
             transform: rotateY(180deg);
         }
 
-        /* Table */
         .data-table th { background: #f8fafc; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
         .data-table td { vertical-align: middle; border-bottom: 1px solid #f1f5f9; padding: 1rem; }
         .data-table tr:hover { background-color: #fcfcfc; }
@@ -260,9 +256,15 @@
         <div id="view-flashcards" class="space-y-6 hidden-view animate-modal">
             <div class="glass-panel rounded-[2rem] p-6 text-center">
                 <h2 class="text-2xl font-black text-gray-800 mb-2">แฟลชการ์ดฝึกอ่าน</h2>
-                <div class="flex flex-wrap justify-center gap-3 mt-4" id="flashcard-level-filters">
+                <div class="flex flex-wrap justify-center gap-3 mt-4 mb-4" id="flashcard-level-filters">
                     <button class="px-4 py-2 rounded-full text-sm font-bold bg-vibrant-blue text-white shadow" onclick="filterFlashcards('')">ทั้งหมด</button>
                     <!-- Injected levels -->
+                </div>
+                
+                <!-- Search bar for Flashcards -->
+                <div class="max-w-sm mx-auto relative">
+                    <i class="fa-solid fa-search absolute left-4 top-3.5 text-gray-400"></i>
+                    <input type="text" id="search-flashcard" oninput="applyFlashcardFilters()" placeholder="ค้นหาคำศัพท์ในแฟลชการ์ด..." class="w-full pl-11 pr-4 py-3 rounded-full border border-gray-200 bg-gray-50 focus:bg-white focus:border-cyan-400 outline-none text-sm transition-all shadow-sm">
                 </div>
             </div>
 
@@ -302,7 +304,7 @@
             
             <div id="flashcard-empty" class="text-center py-20 text-gray-400">
                 <i class="fa-solid fa-folder-open text-6xl mb-4 opacity-50"></i>
-                <p>ไม่พบคำศัพท์ในระดับชั้นนี้</p>
+                <p>ไม่พบคำศัพท์ที่ค้นหา</p>
             </div>
         </div>
 
@@ -337,7 +339,7 @@
                         <thead>
                             <tr>
                                 <th class="w-16 text-center">ลำดับ</th>
-                                <th class="w-16 text-center">รูป/เสียง</th>
+                                <th class="w-24 text-center">รูป/เสียง</th>
                                 <th>คำศัพท์</th>
                                 <th>คำอ่าน</th>
                                 <th>ระดับชั้น</th>
@@ -528,14 +530,14 @@
     <!-- Scripts -->
     <script>
         // ==========================================
-        // ⚙️ การตั้งค่า URL ของระบบ API (แก้ไขตรงนี้)
+        // ⚙️ การตั้งค่า URL ของระบบ API 
         // ==========================================
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzF9sNJv5FVeuVGO3lmcU9SDZgJG2O0O4DcNvPWRDn-KlT_r-o6umx5O8KIarHtWmKu/exec';
 
         // State ของเว็บ
         let appState = {
             vocab: [], docs: [], settings: null, isAdmin: false,
-            fcIndex: 0, fcFiltered: [], chartObj: null
+            fcIndex: 0, fcFiltered: [], activeFcLevel: '', chartObj: null
         };
 
         // API Connector
@@ -568,7 +570,6 @@
             recordVisit: () => api.call('recordVisit')
         };
 
-        // Helper: Convert File to Base64 Data URL
         const processFile = (file) => new Promise((resolve, reject) => {
             if (!file) return resolve('');
             const reader = new FileReader();
@@ -577,7 +578,6 @@
             reader.readAsDataURL(file);
         });
 
-        // Navigation
         function switchTab(tabId) {
             ['view-home', 'view-flashcards', 'view-library', 'view-docs', 'view-settings'].forEach(id => document.getElementById(id).classList.add('hidden-view'));
             document.getElementById('view-' + tabId).classList.remove('hidden-view');
@@ -605,7 +605,6 @@
         const closeModal = id => document.getElementById(id).classList.add('hidden-view');
         const escapeHTML = value => String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
 
-        // Admin Auth
         async function handleLogin(e) {
             e.preventDefault();
             const btn = e.submitter; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> รอสักครู่...'; btn.disabled = true;
@@ -638,7 +637,6 @@
             Swal.fire({icon: 'info', title: 'ออกจากระบบแล้ว', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000});
         }
 
-        // Apply Settings
         function applySettings() {
             const s = appState.settings || {};
             const school = s.schoolName || 'โรงเรียนตัวอย่างวิทยา';
@@ -649,13 +647,11 @@
             document.getElementById('footer-sub').innerText = sub;
         }
 
-        // Data Rendering functions
         function renderHome() {
             const v = appState.vocab || [];
             document.getElementById('stat-total-words').innerText = v.length.toLocaleString('th-TH');
             document.getElementById('stat-total-cats').innerText = new Set(v.map(x=>x.category).filter(Boolean)).size.toLocaleString('th-TH');
             
-            // Random Daily Word
             if (v.length > 0) {
                 const rand = v[Math.floor(Math.random() * v.length)];
                 document.getElementById('daily-word').innerText = rand.word;
@@ -663,7 +659,6 @@
                 document.getElementById('daily-word').dataset.audio = rand.audio || '';
             }
 
-            // Chart
             const levelCounts = {};
             v.forEach(x => { const l = x.level || 'ไม่ระบุ'; levelCounts[l] = (levelCounts[l]||0)+1; });
             const labels = Object.keys(levelCounts).sort();
@@ -677,7 +672,6 @@
             });
         }
 
-        // Audio Player
         function playAudio(audioUrl, text) {
             if (audioUrl && audioUrl.startsWith('http')) {
                 const audio = new Audio(audioUrl);
@@ -709,8 +703,11 @@
             const card = appState.fcFiltered[appState.fcIndex];
             playAudio(card.audio, card.word);
         }
+        
+        window.playLibraryAudio = function(btn) {
+            playAudio(btn.dataset.audio, btn.dataset.word);
+        }
 
-        // Flashcards logic
         function updateFlashcardFilters() {
             const levels = [...new Set(appState.vocab.map(v => v.level).filter(Boolean))].sort();
             const container = document.getElementById('flashcard-level-filters');
@@ -722,17 +719,28 @@
             if(btnElem) {
                 document.querySelectorAll('#flashcard-level-filters button').forEach(b => { b.className = 'px-4 py-2 rounded-full text-sm font-bold bg-white text-gray-600 hover:bg-slate-50 border border-gray-200'; });
                 btnElem.className = 'px-4 py-2 rounded-full text-sm font-bold bg-vibrant-blue text-white shadow';
+                appState.activeFcLevel = level;
             } else {
                 const btns = document.querySelectorAll('#flashcard-level-filters button');
                 if(btns.length>0) {
                     btns.forEach(b => b.className = 'px-4 py-2 rounded-full text-sm font-bold bg-white text-gray-600 hover:bg-slate-50 border border-gray-200');
                     btns[0].className = 'px-4 py-2 rounded-full text-sm font-bold bg-vibrant-blue text-white shadow';
                 }
+                appState.activeFcLevel = '';
             }
+            applyFlashcardFilters();
+        }
 
-            appState.fcFiltered = level ? appState.vocab.filter(v => v.level === level) : [...appState.vocab];
+        window.applyFlashcardFilters = function() {
+            const q = (document.getElementById('search-flashcard')?.value || '').toLowerCase();
+            const lvl = appState.activeFcLevel || '';
             
-            // Randomize order
+            appState.fcFiltered = appState.vocab.filter(v => {
+                const matchQ = (v.word||'').toLowerCase().includes(q) || (v.reading||'').toLowerCase().includes(q);
+                const matchLvl = !lvl || v.level === lvl;
+                return matchQ && matchLvl;
+            });
+            
             appState.fcFiltered.sort(() => Math.random() - 0.5);
             appState.fcIndex = 0;
             
@@ -775,7 +783,7 @@
                 showCard(appState.fcIndex);
             } else {
                 confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#06b6d4', '#ec4899', '#f59e0b'] });
-                Swal.fire({icon:'success', title:'เก่งมาก!', text:'คุณอ่านจบทุกคำในหมวดนี้แล้ว', confirmButtonColor: '#06b6d4'});
+                Swal.fire({icon:'success', title:'เก่งมาก!', text:'คุณอ่านจบทุกคำในรายการนี้แล้ว', confirmButtonColor: '#06b6d4'});
             }
         }
         window.prevCard = function() {
@@ -785,7 +793,6 @@
             }
         }
 
-        // Library (Data Table) logic
         function updateLibraryFilters() {
             const levels = [...new Set(appState.vocab.map(v => v.level).filter(Boolean))].sort();
             const sel = document.getElementById('filter-level');
@@ -806,11 +813,17 @@
 
             const tbody = document.getElementById('library-tbody');
             tbody.innerHTML = list.length ? list.map((v, i) => {
-                const hasImg = v.image ? '<i class="fa-solid fa-image text-pink-400" title="มีรูปภาพ"></i>' : '';
-                const hasAud = v.audio ? '<i class="fa-solid fa-music text-blue-400" title="มีไฟล์เสียง"></i>' : '';
+                const audioData = escapeHTML(v.audio || '');
+                const wordData = escapeHTML(v.word || '');
+                
+                // Audio Button
+                const audioBtn = `<button onclick="playLibraryAudio(this)" data-audio="${audioData}" data-word="${wordData}" class="w-8 h-8 rounded-full bg-cyan-50 text-cyan-600 hover:bg-cyan-100 transition-colors mx-1" title="ฟังเสียงอ่าน"><i class="fa-solid fa-volume-high text-xs"></i></button>`;
+                // Image Icon
+                const imgIcon = v.image ? '<i class="fa-solid fa-image text-pink-400 mx-1" title="มีรูปภาพ"></i>' : '';
+                
                 return `<tr>
                     <td class="text-center text-gray-400 font-bold">${i+1}</td>
-                    <td class="text-center text-lg space-x-1">${hasImg}${hasAud}</td>
+                    <td class="text-center flex justify-center items-center py-3">${audioBtn}${imgIcon}</td>
                     <td class="font-bold text-gray-800 mali-font text-lg">${escapeHTML(v.word)}</td>
                     <td class="text-vibrant-blue mali-font text-lg">${escapeHTML(v.reading)}</td>
                     <td><span class="px-2 py-1 bg-yellow-50 text-yellow-700 rounded text-xs font-bold">${escapeHTML(v.level||'-')}</span></td>
@@ -838,7 +851,6 @@
             </tr>`).join('') : `<tr><td colspan="5" class="text-center py-10 text-gray-400">ไม่มีเอกสาร</td></tr>`;
         }
 
-        // CRUD Operations
         window.openVocabForm = function() {
             document.querySelector('#modal-vocab form').reset();
             document.getElementById('v-id').value = '';
@@ -911,7 +923,6 @@
             });
         }
 
-        // Bulk Import
         window.handleImport = async function(e) {
             e.preventDefault();
             const text = document.getElementById('import-data').value.trim();
@@ -944,7 +955,6 @@
             }
         }
 
-        // Doc CRUD
         window.openDocForm = function() {
             document.querySelector('#modal-doc form').reset();
             document.getElementById('d-id').value = '';
@@ -995,7 +1005,6 @@
             });
         }
 
-        // Settings
         window.handleSaveSettings = async function(e) {
             e.preventDefault();
             Swal.fire({title: 'กำลังบันทึกตั้งค่า...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
@@ -1010,7 +1019,6 @@
             } catch(err) { Swal.fire('ข้อผิดพลาด', err.message, 'error'); }
         }
 
-        // Fetch Initial Data
         async function loadDataFromServer() {
             try {
                 const data = await api.init();
@@ -1021,7 +1029,6 @@
                 applySettings();
                 updateLibraryFilters();
                 
-                // Refresh current view if needed
                 const activeViews = document.querySelectorAll('main > div:not(.hidden-view)');
                 if (activeViews.length > 0) {
                     const viewId = activeViews[0].id.replace('view-', '');
