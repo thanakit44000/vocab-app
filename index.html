@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>บัญชีคำพื้นฐาน | แหล่งเรียนรู้</title>
+    
+    <!-- Fonts: Prompt (UI) and Mali (Vocab Words) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;500;600;700&family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { 
+                        sans: ['Prompt', 'sans-serif'],
+                        mali: ['Mali', 'cursive']
+                    },
+                    colors: {
+                        vibrant: { pink: '#ec4899', purple: '#8b5cf6', cyan: '#06b6d4', yellow: '#f59e0b', blue: '#3b82f6' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- SweetAlert2, Chart.js, Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Prompt', sans-serif;
+            background-color: #f0fdfa; /* Soft cyan background */
+            background-image: radial-gradient(#bae6fd 1px, transparent 1px), radial-gradient(#bae6fd 1px, transparent 1px);
+            background-size: 40px 40px;
+            background-position: 0 0, 20px 20px;
+            color: #334155;
+            overflow-x: hidden;
+        }
+
+        .mali-font { font-family: 'Mali', cursive; }
+
+        /* Light Glassmorphism Cards */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.08);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 8px 24px -12px rgba(15, 23, 42, 0.1);
+            transition: all 0.3s ease;
+        }
+        .glass-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 30px -10px rgba(15, 23, 42, 0.15);
+        }
+
+        .btn-vibrant {
+            background: linear-gradient(135deg, #06b6d4, #3b82f6);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .btn-vibrant:hover {
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Utilities */
+        .hidden-view { display: none !important; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(241,245,249,1); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.5); border-radius: 10px; }
+        
+        .animate-modal { animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        /* 3D Flip Card Styles */
+        .flip-card {
+            background-color: transparent;
+            width: 100%;
+            height: 400px;
+            perspective: 1000px;
+        }
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+        .flip-card.flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            border: 4px solid #fff;
+        }
+        .flip-card-front {
+            background: linear-gradient(135deg, #ffffff, #f8fafc);
+        }
+        .flip-card-back {
+            background: linear-gradient(135deg, #e0f2fe, #f0f9ff);
+            transform: rotateY(180deg);
+        }
+
+        /* Table */
+        .data-table th { background: #f8fafc; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
+        .data-table td { vertical-align: middle; border-bottom: 1px solid #f1f5f9; padding: 1rem; }
+        .data-table tr:hover { background-color: #fcfcfc; }
+        
+        .admin-only { display: none; }
+        body.admin-layout .admin-only { display: inline-flex; }
+        body.admin-layout .admin-only-block { display: block; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col pb-10">
+
+    <!-- Loading Overlay -->
+    <div id="global-loading" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm">
+        <div class="w-16 h-16 relative mb-4">
+            <div class="absolute inset-0 rounded-full border-4 border-t-vibrant-blue border-r-vibrant-cyan border-b-vibrant-yellow border-l-vibrant-pink animate-spin"></div>
+        </div>
+        <p class="text-vibrant-blue font-bold animate-pulse tracking-wide">กำลังเชื่อมต่อฐานข้อมูล...</p>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-40 glass-panel px-4 py-3">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('home')">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-500 text-white shadow-md flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-book-open-reader"></i>
+                </div>
+                <div>
+                    <h1 id="nav-title" class="font-bold text-gray-800 text-lg leading-tight tracking-wide">บัญชีคำพื้นฐาน</h1>
+                    <p id="nav-subtitle" class="text-xs text-vibrant-blue font-bold">เพื่อการเรียนรู้</p>
+                </div>
+            </div>
+
+            <!-- Desktop Menu -->
+            <div class="hidden lg:flex items-center gap-2">
+                <button onclick="switchTab('home')" class="nav-btn px-4 py-2.5 rounded-full text-sm font-bold text-gray-600 hover:bg-slate-100 transition-all" data-target="home"><i class="fa-solid fa-house mr-1.5"></i> หน้าแรก</button>
+                <button onclick="switchTab('flashcards')" class="nav-btn px-4 py-2.5 rounded-full text-sm font-bold text-gray-600 hover:bg-slate-100 transition-all" data-target="flashcards"><i class="fa-solid fa-layer-group mr-1.5"></i> แฟลชการ์ด</button>
+                <button onclick="switchTab('library')" class="nav-btn px-4 py-2.5 rounded-full text-sm font-bold text-gray-600 hover:bg-slate-100 transition-all" data-target="library"><i class="fa-solid fa-table-list mr-1.5"></i> คลังคำศัพท์</button>
+                <button onclick="switchTab('docs')" class="nav-btn px-4 py-2.5 rounded-full text-sm font-bold text-gray-600 hover:bg-slate-100 transition-all" data-target="docs"><i class="fa-solid fa-file-pdf mr-1.5"></i> เอกสาร</button>
+                
+                <div class="w-px h-6 bg-gray-300 mx-2"></div>
+                
+                <button onclick="switchTab('settings')" class="nav-btn admin-only hidden px-4 py-2.5 rounded-full text-sm font-bold text-gray-600 hover:bg-slate-100 transition-all" data-target="settings"><i class="fa-solid fa-gear mr-1.5"></i> ตั้งค่าระบบ</button>
+                
+                <button id="btn-nav-login" onclick="openModal('modal-login')" class="btn-vibrant px-6 py-2.5 rounded-full text-sm font-bold shadow-md"><i class="fa-solid fa-right-to-bracket mr-1.5"></i> Admin</button>
+                <button id="btn-nav-logout" onclick="handleLogout()" class="hidden-view px-5 py-2.5 rounded-full text-sm font-bold bg-white text-rose-500 border border-rose-200 hover:bg-rose-50 shadow-sm"><i class="fa-solid fa-right-from-bracket mr-1.5"></i> ออกจากระบบ</button>
+            </div>
+
+            <!-- Mobile Toggle -->
+            <button class="lg:hidden w-10 h-10 rounded-full bg-slate-100 text-vibrant-blue flex items-center justify-center" onclick="document.getElementById('mobile-menu').classList.toggle('hidden')">
+                <i class="fa-solid fa-bars text-lg"></i>
+            </button>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden lg:hidden mt-4 pt-4 border-t border-slate-200 flex-col gap-2 animate-modal">
+            <button onclick="switchTab('home'); this.parentElement.classList.add('hidden')" class="flex items-center gap-3 px-4 py-3 text-gray-700 bg-slate-50 hover:bg-slate-100 rounded-xl font-bold"><i class="fa-solid fa-house w-5 text-center"></i> หน้าแรก</button>
+            <button onclick="switchTab('flashcards'); this.parentElement.classList.add('hidden')" class="flex items-center gap-3 px-4 py-3 text-gray-700 bg-slate-50 hover:bg-slate-100 rounded-xl font-bold"><i class="fa-solid fa-layer-group w-5 text-center"></i> แฟลชการ์ด</button>
+            <button onclick="switchTab('library'); this.parentElement.classList.add('hidden')" class="flex items-center gap-3 px-4 py-3 text-gray-700 bg-slate-50 hover:bg-slate-100 rounded-xl font-bold"><i class="fa-solid fa-table-list w-5 text-center"></i> คลังคำศัพท์</button>
+            <button onclick="switchTab('docs'); this.parentElement.classList.add('hidden')" class="flex items-center gap-3 px-4 py-3 text-gray-700 bg-slate-50 hover:bg-slate-100 rounded-xl font-bold"><i class="fa-solid fa-file-pdf w-5 text-center"></i> เอกสาร</button>
+            
+            <button onclick="switchTab('settings'); this.parentElement.classList.add('hidden')" class="admin-only hidden items-center gap-3 px-4 py-3 text-gray-700 bg-slate-50 hover:bg-slate-100 rounded-xl font-bold"><i class="fa-solid fa-gear w-5 text-center"></i> ตั้งค่าระบบ</button>
+            
+            <button id="btn-mob-login" onclick="openModal('modal-login'); this.parentElement.classList.add('hidden')" class="btn-vibrant flex items-center gap-3 px-4 py-3 rounded-xl font-bold mt-2"><i class="fa-solid fa-right-to-bracket w-5 text-center"></i> เข้าสู่ระบบ Admin</button>
+            <button id="btn-mob-logout" onclick="handleLogout(); this.parentElement.classList.add('hidden')" class="hidden-view flex items-center gap-3 px-4 py-3 bg-white text-rose-500 border border-rose-200 rounded-xl font-bold mt-2"><i class="fa-solid fa-right-from-bracket w-5 text-center"></i> ออกจากระบบ</button>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 mt-8 w-full flex-1 relative z-10">
+        
+        <!-- ================= VIEW: HOME ================= -->
+        <div id="view-home" class="space-y-8 animate-modal">
+            <!-- Hero -->
+            <section class="glass-panel rounded-[2.5rem] p-8 sm:p-12 text-center relative overflow-hidden bg-white">
+                <div class="absolute -right-20 -top-20 w-64 h-64 bg-cyan-200 rounded-full mix-blend-multiply filter blur-[80px] opacity-60"></div>
+                <div class="absolute -left-20 -bottom-20 w-64 h-64 bg-pink-200 rounded-full mix-blend-multiply filter blur-[80px] opacity-60"></div>
+                
+                <div class="relative z-10">
+                    <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 text-vibrant-blue text-xs font-bold mb-4">
+                        <i class="fa-solid fa-star text-yellow-400"></i> ยินดีต้อนรับสู่ระบบเรียนรู้
+                    </span>
+                    <h2 class="text-4xl sm:text-5xl md:text-6xl font-black text-gray-900 leading-tight mb-4">
+                        ฝึกอ่านเขียน เรียนสนุก<br>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-blue-600">บัญชีคำพื้นฐาน</span>
+                    </h2>
+                    <p class="text-gray-500 text-lg max-w-2xl mx-auto mb-8">รวบรวมคำศัพท์พื้นฐานสำหรับนักเรียน เพื่อพัฒนาทักษะการอ่านและการเขียน พร้อมภาพประกอบและเสียงอ่านที่ชัดเจน</p>
+                    <button onclick="switchTab('flashcards')" class="btn-vibrant px-8 py-4 rounded-full font-bold shadow-lg shadow-cyan-200 inline-flex items-center gap-2 text-lg">
+                        <i class="fa-solid fa-play"></i> เริ่มฝึกอ่านเลย
+                    </button>
+                </div>
+            </section>
+
+            <div class="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-6">
+                <!-- Daily Word -->
+                <div class="glass-card rounded-[2rem] p-8 text-center flex flex-col justify-center items-center relative overflow-hidden bg-white">
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">⭐ คำศัพท์แนะนำวันนี้</p>
+                    <div id="daily-word-container" class="w-full flex-1 flex flex-col justify-center items-center min-h-[200px]">
+                        <h3 id="daily-word" class="mali-font text-5xl font-bold text-gray-800 mb-2">-</h3>
+                        <p id="daily-reading" class="text-lg text-vibrant-blue font-medium mb-6">-</p>
+                        <button onclick="playDailyWord()" class="w-14 h-14 rounded-full bg-cyan-50 text-cyan-600 hover:bg-cyan-100 flex items-center justify-center text-2xl transition-colors shadow-sm">
+                            <i class="fa-solid fa-volume-high"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stats & Chart -->
+                <div class="glass-card rounded-[2rem] p-6 sm:p-8 bg-white">
+                    <h3 class="font-bold text-xl text-gray-800 mb-6 border-b border-gray-100 pb-3">ภาพรวมคำศัพท์ในระบบ</h3>
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="bg-blue-50 rounded-2xl p-4 border border-blue-100">
+                            <p class="text-sm text-blue-600 font-bold">คำศัพท์ทั้งหมด</p>
+                            <h4 id="stat-total-words" class="text-3xl font-black text-blue-900 mt-1">0</h4>
+                        </div>
+                        <div class="bg-purple-50 rounded-2xl p-4 border border-purple-100">
+                            <p class="text-sm text-purple-600 font-bold">หมวดหมู่ทั้งหมด</p>
+                            <h4 id="stat-total-cats" class="text-3xl font-black text-purple-900 mt-1">0</h4>
+                        </div>
+                    </div>
+                    <div class="relative h-48 w-full">
+                        <canvas id="chart-levels"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= VIEW: FLASHCARDS ================= -->
+        <div id="view-flashcards" class="space-y-6 hidden-view animate-modal">
+            <div class="glass-panel rounded-[2rem] p-6 text-center">
+                <h2 class="text-2xl font-black text-gray-800 mb-2">แฟลชการ์ดฝึกอ่าน</h2>
+                <div class="flex flex-wrap justify-center gap-3 mt-4" id="flashcard-level-filters">
+                    <button class="px-4 py-2 rounded-full text-sm font-bold bg-vibrant-blue text-white shadow" onclick="filterFlashcards('')">ทั้งหมด</button>
+                    <!-- Injected levels -->
+                </div>
+            </div>
+
+            <div id="flashcard-area" class="max-w-2xl mx-auto hidden-view">
+                <div class="text-center mb-4 text-sm font-bold text-gray-500">
+                    คำที่ <span id="fc-current-num" class="text-vibrant-blue text-lg">0</span> / <span id="fc-total-num">0</span>
+                </div>
+                
+                <div class="flip-card cursor-pointer" onclick="document.querySelector('.flip-card').classList.toggle('flipped')">
+                    <div class="flip-card-inner">
+                        <!-- Front (Word + Image) -->
+                        <div class="flip-card-front bg-white">
+                            <div id="fc-image-container" class="w-40 h-40 mb-6 rounded-2xl overflow-hidden shadow-sm border border-gray-100 hidden">
+                                <img id="fc-image" src="" class="w-full h-full object-cover" alt="รูปประกอบ">
+                            </div>
+                            <h3 id="fc-word" class="mali-font text-6xl sm:text-7xl font-bold text-gray-800 leading-tight">คำศัพท์</h3>
+                            <p class="text-xs text-gray-400 mt-4"><i class="fa-solid fa-hand-pointer"></i> แตะเพื่อดูคำอ่าน</p>
+                        </div>
+                        <!-- Back (Reading + Details) -->
+                        <div class="flip-card-back bg-white">
+                            <p class="text-gray-400 font-bold mb-2">คำอ่าน</p>
+                            <h3 id="fc-reading" class="mali-font text-5xl sm:text-6xl font-bold text-vibrant-blue mb-6">-</h3>
+                            <div class="flex gap-2">
+                                <span id="fc-badge-level" class="px-3 py-1 rounded-md bg-yellow-100 text-yellow-700 text-xs font-bold border border-yellow-200">-</span>
+                                <span id="fc-badge-cat" class="px-3 py-1 rounded-md bg-pink-100 text-pink-700 text-xs font-bold border border-pink-200">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-center items-center gap-6 mt-8">
+                    <button onclick="prevCard()" class="w-14 h-14 rounded-full bg-white text-gray-600 hover:text-vibrant-blue shadow hover:shadow-md transition-all text-xl"><i class="fa-solid fa-chevron-left"></i></button>
+                    <button onclick="playCurrentCardAudio(event)" class="w-20 h-20 rounded-full bg-vibrant-blue text-white shadow-lg hover:shadow-xl transition-all text-3xl flex items-center justify-center transform hover:scale-105"><i class="fa-solid fa-volume-high"></i></button>
+                    <button onclick="nextCard()" class="w-14 h-14 rounded-full bg-white text-gray-600 hover:text-vibrant-blue shadow hover:shadow-md transition-all text-xl"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+            </div>
+            
+            <div id="flashcard-empty" class="text-center py-20 text-gray-400">
+                <i class="fa-solid fa-folder-open text-6xl mb-4 opacity-50"></i>
+                <p>ไม่พบคำศัพท์ในระดับชั้นนี้</p>
+            </div>
+        </div>
+
+        <!-- ================= VIEW: LIBRARY ================= -->
+        <div id="view-library" class="space-y-6 hidden-view animate-modal">
+            <div class="glass-panel rounded-[2.5rem] p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white">
+                <div>
+                    <h2 class="text-2xl font-black text-gray-800"><i class="fa-solid fa-table-list text-vibrant-cyan mr-2"></i> คลังคำศัพท์</h2>
+                    <p class="text-sm text-gray-500 mt-1">รายการคำศัพท์ทั้งหมดในระบบ</p>
+                </div>
+                <div class="admin-only gap-2 w-full md:w-auto flex-wrap">
+                    <button onclick="openModal('modal-import')" class="flex-1 md:flex-none bg-emerald-100 text-emerald-700 hover:bg-emerald-200 px-4 py-2.5 rounded-xl text-sm font-bold transition-colors"><i class="fa-solid fa-file-import mr-1.5"></i> นำเข้าข้อมูล</button>
+                    <button onclick="openVocabForm()" class="flex-1 md:flex-none btn-vibrant px-4 py-2.5 rounded-xl text-sm font-bold shadow-md"><i class="fa-solid fa-plus mr-1.5"></i> เพิ่มคำศัพท์</button>
+                </div>
+            </div>
+
+            <div class="glass-card rounded-[2rem] p-4 bg-white">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div class="relative md:col-span-2">
+                        <i class="fa-solid fa-search absolute left-4 top-3.5 text-gray-400"></i>
+                        <input type="text" id="search-vocab" oninput="renderLibrary()" placeholder="ค้นหาคำศัพท์ หรือ คำอ่าน..." class="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-cyan-400 outline-none text-sm transition-all">
+                    </div>
+                    <select id="filter-level" onchange="renderLibrary()" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white outline-none text-sm text-gray-700 cursor-pointer">
+                        <option value="">-- ทุกระดับชั้น --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="glass-card rounded-[2rem] overflow-hidden bg-white shadow-sm border border-gray-100">
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="data-table w-full text-left border-collapse min-w-[600px]">
+                        <thead>
+                            <tr>
+                                <th class="w-16 text-center">ลำดับ</th>
+                                <th class="w-16 text-center">รูป/เสียง</th>
+                                <th>คำศัพท์</th>
+                                <th>คำอ่าน</th>
+                                <th>ระดับชั้น</th>
+                                <th>หมวดหมู่</th>
+                                <th class="w-24 text-center admin-only-block">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="library-tbody" class="text-sm divide-y divide-gray-100">
+                            <!-- Injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= VIEW: DOCS ================= -->
+        <div id="view-docs" class="space-y-6 hidden-view animate-modal">
+            <div class="glass-panel rounded-[2.5rem] p-6 flex justify-between items-center bg-white">
+                <div>
+                    <h2 class="text-2xl font-black text-gray-800"><i class="fa-solid fa-file-pdf text-rose-500 mr-2"></i> เอกสารประกอบ</h2>
+                    <p class="text-sm text-gray-500 mt-1">ดาวน์โหลดไฟล์เอกสาร สื่อการสอน</p>
+                </div>
+                <button onclick="openDocForm()" class="admin-only btn-vibrant px-5 py-2.5 rounded-xl text-sm font-bold"><i class="fa-solid fa-plus mr-1.5"></i> เพิ่มเอกสาร</button>
+            </div>
+            
+            <div class="glass-card rounded-[2rem] overflow-hidden bg-white shadow-sm border border-gray-100 p-2">
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="data-table w-full text-left min-w-[500px]">
+                        <thead>
+                            <tr>
+                                <th class="w-16 text-center">ลำดับ</th>
+                                <th>ชื่อเอกสาร</th>
+                                <th>รายละเอียด</th>
+                                <th class="w-28 text-center">ดาวน์โหลด</th>
+                                <th class="w-24 text-center admin-only-block">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="docs-tbody" class="text-sm divide-y divide-gray-100"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= VIEW: SETTINGS ================= -->
+        <div id="view-settings" class="space-y-6 hidden-view animate-modal admin-only-block">
+            <div class="glass-panel rounded-[2.5rem] p-6 bg-white border-l-4 border-l-vibrant-purple">
+                <h2 class="text-2xl font-black text-gray-800">ตั้งค่าระบบ (Admin)</h2>
+                <p class="text-sm text-gray-500 mt-1">จัดการข้อความส่วนล่างของเว็บไซต์ (Footer)</p>
+            </div>
+            
+            <form onsubmit="handleSaveSettings(event)" class="glass-card rounded-[2rem] p-6 md:p-8 bg-white max-w-3xl">
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">ชื่อโรงเรียน / หน่วยงาน</label>
+                        <input type="text" id="set-schoolName" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-vibrant-purple outline-none text-sm" placeholder="เช่น โรงเรียนตัวอย่างวิทยา">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">ข้อความรอง (Subtext)</label>
+                        <input type="text" id="set-footerSubtext" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-vibrant-purple outline-none text-sm" placeholder="เช่น แหล่งเรียนรู้ออนไลน์สำหรับนักเรียน">
+                    </div>
+                    <div class="pt-4 border-t border-gray-100 text-right">
+                        <button type="submit" class="bg-vibrant-purple hover:bg-purple-600 text-white px-8 py-3 rounded-xl font-bold shadow-md transition-colors"><i class="fa-solid fa-save mr-2"></i> บันทึกการตั้งค่า</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-16 bg-white border-t border-gray-200 py-8 relative z-10 text-center">
+        <div class="max-w-7xl mx-auto px-4">
+            <h3 id="footer-school" class="font-bold text-gray-800 text-lg mb-1">บัญชีคำพื้นฐาน โรงเรียน...</h3>
+            <p id="footer-sub" class="text-sm text-gray-500 mb-6">แหล่งเรียนรู้ออนไลน์สำหรับนักเรียน</p>
+            
+            <div class="inline-flex gap-4 bg-slate-50 border border-slate-100 rounded-2xl p-4 shadow-inner text-sm">
+                <div><span class="block text-xs text-gray-400 font-bold mb-1">เข้าชมวันนี้</span><strong id="visit-today" class="text-vibrant-blue text-xl">0</strong></div>
+                <div class="w-px bg-gray-200"></div>
+                <div><span class="block text-xs text-gray-400 font-bold mb-1">เข้าชมทั้งหมด</span><strong id="visit-total" class="text-gray-700 text-xl">0</strong></div>
+            </div>
+            <p class="text-xs text-gray-400 mt-6">© 2026 Powered by Google Apps Script & GitHub Pages</p>
+        </div>
+    </footer>
+
+    <!-- Modals -->
+
+    <!-- Login Modal -->
+    <div id="modal-login" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm hidden-view p-4">
+        <div class="bg-white w-full max-w-sm rounded-[2rem] p-8 relative shadow-2xl animate-modal">
+            <button onclick="closeModal('modal-login')" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 text-gray-500 hover:bg-rose-100 hover:text-rose-500 flex justify-center items-center"><i class="fa-solid fa-xmark"></i></button>
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-blue-50 text-vibrant-blue rounded-[1.2rem] mx-auto flex items-center justify-center text-3xl mb-4"><i class="fa-solid fa-shield-halved"></i></div>
+                <h3 class="text-2xl font-black text-gray-800">เข้าสู่ระบบ (Admin)</h3>
+            </div>
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <input type="text" id="login-user" required placeholder="Username" class="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white outline-none text-sm">
+                <input type="password" id="login-pass" required placeholder="Password" class="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white outline-none text-sm">
+                <button type="submit" class="w-full btn-vibrant py-4 rounded-xl font-bold shadow-md text-base mt-2">เข้าสู่ระบบ</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add/Edit Vocab Modal -->
+    <div id="modal-vocab" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm hidden-view p-4">
+        <div class="bg-white w-full max-w-lg rounded-[2rem] overflow-hidden flex flex-col max-h-[95vh] shadow-2xl animate-modal">
+            <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <h3 class="font-bold text-lg text-gray-800"><i class="fa-solid fa-pen-to-square text-vibrant-cyan mr-2"></i> จัดการคำศัพท์</h3>
+                <button onclick="closeModal('modal-vocab')" class="text-gray-400 hover:text-rose-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form onsubmit="handleSaveVocab(event)" class="p-6 overflow-y-auto custom-scrollbar space-y-4">
+                <input type="hidden" id="v-id">
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-sm font-bold text-gray-700 mb-1">คำศัพท์ *</label><input type="text" id="v-word" required class="mali-font w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 outline-none text-lg"></div>
+                    <div><label class="block text-sm font-bold text-gray-700 mb-1">คำอ่าน *</label><input type="text" id="v-reading" required class="mali-font w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 outline-none text-lg text-vibrant-blue"></div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-sm font-bold text-gray-700 mb-1">ระดับชั้น *</label><input type="text" id="v-level" placeholder="เช่น ป.1" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 outline-none text-sm"></div>
+                    <div><label class="block text-sm font-bold text-gray-700 mb-1">หมวดหมู่</label><input type="text" id="v-category" placeholder="เช่น สัตว์, ผลไม้" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 outline-none text-sm"></div>
+                </div>
+
+                <div class="p-4 bg-slate-50 border border-slate-100 rounded-2xl space-y-3">
+                    <label class="block text-sm font-bold text-gray-700"><i class="fa-regular fa-image text-pink-500 mr-1"></i> รูปภาพประกอบ (เลือกใส่ไฟล์ หรือ ลิงก์ URL)</label>
+                    <input type="file" id="v-image-file" accept="image/*" class="w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-pink-50 file:text-pink-700 file:font-bold cursor-pointer">
+                    <input type="url" id="v-image-url" placeholder="หรือวางลิงก์รูปภาพ https://..." class="w-full px-3 py-2 rounded-lg border border-gray-200 text-xs outline-none">
+                    <input type="hidden" id="v-image-old">
+                </div>
+
+                <div class="p-4 bg-slate-50 border border-slate-100 rounded-2xl space-y-3">
+                    <label class="block text-sm font-bold text-gray-700"><i class="fa-solid fa-microphone text-blue-500 mr-1"></i> ไฟล์เสียงอ่าน (ถ้าไม่ใส่ ระบบจะใช้ AI อ่านแทน)</label>
+                    <input type="file" id="v-audio-file" accept="audio/*" class="w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 file:font-bold cursor-pointer">
+                    <input type="url" id="v-audio-url" placeholder="หรือวางลิงก์ไฟล์เสียง https://..." class="w-full px-3 py-2 rounded-lg border border-gray-200 text-xs outline-none">
+                    <input type="hidden" id="v-audio-old">
+                </div>
+
+                <div class="pt-4 flex justify-end gap-3 border-t border-gray-100">
+                    <button type="button" onclick="closeModal('modal-vocab')" class="px-5 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold">ยกเลิก</button>
+                    <button type="submit" class="btn-vibrant px-6 py-3 rounded-xl font-bold shadow-md">บันทึกข้อมูล</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bulk Import Modal -->
+    <div id="modal-import" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm hidden-view p-4">
+        <div class="bg-white w-full max-w-2xl rounded-[2rem] overflow-hidden flex flex-col shadow-2xl animate-modal">
+            <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-emerald-50">
+                <h3 class="font-bold text-lg text-emerald-800"><i class="fa-solid fa-file-excel mr-2"></i> นำเข้าคำศัพท์จาก Excel</h3>
+                <button onclick="closeModal('modal-import')" class="text-emerald-400 hover:text-emerald-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form onsubmit="handleImport(event)" class="p-6">
+                <p class="text-sm text-gray-600 mb-3">คัดลอกข้อมูลจากตาราง (Excel/Sheets) ที่มี 4 คอลัมน์: <br><b>คำศัพท์ | คำอ่าน | ระดับชั้น | หมวดหมู่</b> มาวางในช่องด้านล่างนี้</p>
+                <textarea id="import-data" rows="10" required placeholder="โรงเรียน&#9;โรง-เรียน&#9;ป.1&#9;สถานที่&#10;คุณครู&#9;คุน-ครู&#9;ป.1&#9;บุคคล" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white outline-none text-sm resize-none whitespace-pre overflow-auto"></textarea>
+                <div class="pt-4 mt-2 flex justify-end gap-3">
+                    <button type="button" onclick="closeModal('modal-import')" class="px-5 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold">ยกเลิก</button>
+                    <button type="submit" class="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold shadow-md">นำเข้าข้อมูล</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Doc Modal -->
+    <div id="modal-doc" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm hidden-view p-4">
+        <div class="bg-white w-full max-w-md rounded-[2rem] overflow-hidden flex flex-col shadow-2xl animate-modal">
+            <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <h3 class="font-bold text-lg text-gray-800"><i class="fa-solid fa-file-pdf text-rose-500 mr-2"></i> จัดการเอกสาร</h3>
+                <button onclick="closeModal('modal-doc')" class="text-gray-400 hover:text-rose-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form onsubmit="handleSaveDoc(event)" class="p-6 space-y-4">
+                <input type="hidden" id="d-id">
+                <div><label class="block text-sm font-bold text-gray-700 mb-1">ชื่อเอกสาร *</label><input type="text" id="d-title" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 outline-none text-sm"></div>
+                <div><label class="block text-sm font-bold text-gray-700 mb-1">รายละเอียด</label><textarea id="d-desc" rows="2" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 outline-none text-sm"></textarea></div>
+                <div class="p-4 bg-slate-50 border border-slate-100 rounded-2xl space-y-3">
+                    <label class="block text-sm font-bold text-gray-700"><i class="fa-solid fa-upload text-blue-500 mr-1"></i> ไฟล์เอกสาร (ไฟล์ หรือ ลิงก์)</label>
+                    <input type="file" id="d-file" class="w-full text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 file:font-bold cursor-pointer">
+                    <input type="url" id="d-url" placeholder="ลิงก์ดาวน์โหลด (URL)" class="w-full px-3 py-2 rounded-lg border border-gray-200 text-xs outline-none">
+                    <input type="hidden" id="d-old-url">
+                </div>
+                <div class="pt-2 flex justify-end gap-3">
+                    <button type="button" onclick="closeModal('modal-doc')" class="px-5 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold">ยกเลิก</button>
+                    <button type="submit" class="btn-vibrant px-6 py-3 rounded-xl font-bold shadow-md">บันทึกเอกสาร</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // ==========================================
+        // ⚙️ การตั้งค่า URL ของระบบ API (แก้ไขตรงนี้)
+        // ==========================================
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzF9sNJv5FVeuVGO3lmcU9SDZgJG2O0O4DcNvPWRDn-KlT_r-o6umx5O8KIarHtWmKu/exec';
+
+        // State ของเว็บ
+        let appState = {
+            vocab: [], docs: [], settings: null, isAdmin: false,
+            fcIndex: 0, fcFiltered: [], chartObj: null
+        };
+
+        // API Connector
+        const api = {
+            call: async (action, data = {}) => {
+                try {
+                    const response = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ action: action, data: data })
+                    });
+                    const result = await response.json();
+                    if (result.status === 'success') {
+                        return result.data;
+                    } else {
+                        throw new Error(result.message);
+                    }
+                } catch (error) {
+                    console.error('API Error:', error);
+                    throw new Error('ไม่สามารถติดต่อเซิร์ฟเวอร์ได้: ' + error.message);
+                }
+            },
+            init: () => api.call('init'),
+            saveVocab: (data) => api.call('saveVocab', data),
+            deleteVocab: (id) => api.call('deleteVocab', { id }),
+            importVocab: (list) => api.call('importVocab', list),
+            saveDoc: (data) => api.call('saveDoc', data),
+            deleteDoc: (id) => api.call('deleteDoc', { id }),
+            saveSettings: (data) => api.call('saveSettings', data),
+            login: (u, p) => api.call('login', { user: u, pass: p }),
+            recordVisit: () => api.call('recordVisit')
+        };
+
+        // Helper: Convert File to Base64 Data URL
+        const processFile = (file) => new Promise((resolve, reject) => {
+            if (!file) return resolve('');
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result);
+            reader.onerror = () => reject(new Error("อ่านไฟล์ไม่สำเร็จ"));
+            reader.readAsDataURL(file);
+        });
+
+        // Navigation
+        function switchTab(tabId) {
+            ['view-home', 'view-flashcards', 'view-library', 'view-docs', 'view-settings'].forEach(id => document.getElementById(id).classList.add('hidden-view'));
+            document.getElementById('view-' + tabId).classList.remove('hidden-view');
+            
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                if(btn.dataset.target === tabId) {
+                    btn.classList.add('bg-slate-100', 'text-vibrant-blue'); btn.classList.remove('text-gray-600');
+                } else {
+                    btn.classList.remove('bg-slate-100', 'text-vibrant-blue'); btn.classList.add('text-gray-600');
+                }
+            });
+
+            if (tabId === 'home') renderHome();
+            if (tabId === 'flashcards') { updateFlashcardFilters(); filterFlashcards(''); }
+            if (tabId === 'library') { updateLibraryFilters(); renderLibrary(); }
+            if (tabId === 'docs') renderDocs();
+            if (tabId === 'settings' && appState.settings) {
+                document.getElementById('set-schoolName').value = appState.settings.schoolName || '';
+                document.getElementById('set-footerSubtext').value = appState.settings.footerSubtext || '';
+            }
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+
+        const openModal = id => document.getElementById(id).classList.remove('hidden-view');
+        const closeModal = id => document.getElementById(id).classList.add('hidden-view');
+        const escapeHTML = value => String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
+
+        // Admin Auth
+        async function handleLogin(e) {
+            e.preventDefault();
+            const btn = e.submitter; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> รอสักครู่...'; btn.disabled = true;
+            try {
+                const ok = await api.login(document.getElementById('login-user').value, document.getElementById('login-pass').value);
+                if(ok) {
+                    appState.isAdmin = true;
+                    document.body.classList.add('admin-layout');
+                    document.getElementById('btn-nav-login').classList.add('hidden-view');
+                    document.getElementById('btn-mob-login').classList.add('hidden-view');
+                    document.getElementById('btn-nav-logout').classList.remove('hidden-view');
+                    document.getElementById('btn-mob-logout').classList.remove('hidden-view');
+                    closeModal('modal-login');
+                    Swal.fire({icon: 'success', title: 'เข้าสู่ระบบ Admin สำเร็จ', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000});
+                } else throw new Error();
+            } catch(err) { 
+                Swal.fire({icon: 'error', title: 'รหัสผ่านไม่ถูกต้อง'}); 
+            } finally { 
+                btn.innerHTML = 'เข้าสู่ระบบ'; btn.disabled = false; 
+            }
+        }
+        function handleLogout() {
+            appState.isAdmin = false;
+            document.body.classList.remove('admin-layout');
+            document.getElementById('btn-nav-login').classList.remove('hidden-view');
+            document.getElementById('btn-mob-login').classList.remove('hidden-view');
+            document.getElementById('btn-nav-logout').classList.add('hidden-view');
+            document.getElementById('btn-mob-logout').classList.add('hidden-view');
+            switchTab('home');
+            Swal.fire({icon: 'info', title: 'ออกจากระบบแล้ว', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000});
+        }
+
+        // Apply Settings
+        function applySettings() {
+            const s = appState.settings || {};
+            const school = s.schoolName || 'โรงเรียนตัวอย่างวิทยา';
+            const sub = s.footerSubtext || 'แหล่งเรียนรู้ออนไลน์สำหรับนักเรียน';
+            document.title = `บัญชีคำพื้นฐาน | ${school}`;
+            document.getElementById('nav-subtitle').innerText = school;
+            document.getElementById('footer-school').innerText = `บัญชีคำพื้นฐาน ${school}`;
+            document.getElementById('footer-sub').innerText = sub;
+        }
+
+        // Data Rendering functions
+        function renderHome() {
+            const v = appState.vocab || [];
+            document.getElementById('stat-total-words').innerText = v.length.toLocaleString('th-TH');
+            document.getElementById('stat-total-cats').innerText = new Set(v.map(x=>x.category).filter(Boolean)).size.toLocaleString('th-TH');
+            
+            // Random Daily Word
+            if (v.length > 0) {
+                const rand = v[Math.floor(Math.random() * v.length)];
+                document.getElementById('daily-word').innerText = rand.word;
+                document.getElementById('daily-reading').innerText = rand.reading || '';
+                document.getElementById('daily-word').dataset.audio = rand.audio || '';
+            }
+
+            // Chart
+            const levelCounts = {};
+            v.forEach(x => { const l = x.level || 'ไม่ระบุ'; levelCounts[l] = (levelCounts[l]||0)+1; });
+            const labels = Object.keys(levelCounts).sort();
+            const data = labels.map(l => levelCounts[l]);
+
+            if(appState.chartObj) appState.chartObj.destroy();
+            appState.chartObj = new Chart(document.getElementById('chart-levels'), {
+                type: 'bar',
+                data: { labels: labels, datasets: [{ label: 'จำนวนคำศัพท์', data: data, backgroundColor: '#06b6d4', borderRadius: 6 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1, font: {family:'Prompt'} } }, x: { ticks: { font: {family:'Prompt'} } } } }
+            });
+        }
+
+        // Audio Player
+        function playAudio(audioUrl, text) {
+            if (audioUrl && audioUrl.startsWith('http')) {
+                const audio = new Audio(audioUrl);
+                audio.play().catch(e => {
+                    console.log("Audio play failed, fallback to TTS", e);
+                    speakTTS(text);
+                });
+            } else {
+                speakTTS(text);
+            }
+        }
+        function speakTTS(text) {
+            if(!text) return;
+            const u = new SpeechSynthesisUtterance(text);
+            u.lang = 'th-TH';
+            u.rate = 0.8;
+            window.speechSynthesis.speak(u);
+        }
+
+        function playDailyWord() {
+            const w = document.getElementById('daily-word').innerText;
+            const a = document.getElementById('daily-word').dataset.audio;
+            if(w && w !== '-') playAudio(a, w);
+        }
+
+        function playCurrentCardAudio(e) {
+            e.stopPropagation();
+            if(appState.fcFiltered.length === 0) return;
+            const card = appState.fcFiltered[appState.fcIndex];
+            playAudio(card.audio, card.word);
+        }
+
+        // Flashcards logic
+        function updateFlashcardFilters() {
+            const levels = [...new Set(appState.vocab.map(v => v.level).filter(Boolean))].sort();
+            const container = document.getElementById('flashcard-level-filters');
+            container.innerHTML = `<button class="px-4 py-2 rounded-full text-sm font-bold bg-vibrant-blue text-white shadow" onclick="filterFlashcards('')">ทั้งหมด</button>` + 
+                levels.map(l => `<button class="px-4 py-2 rounded-full text-sm font-bold bg-white text-gray-600 hover:bg-slate-50 border border-gray-200" onclick="filterFlashcards('${escapeHTML(l)}', this)">${escapeHTML(l)}</button>`).join('');
+        }
+
+        window.filterFlashcards = function(level, btnElem) {
+            if(btnElem) {
+                document.querySelectorAll('#flashcard-level-filters button').forEach(b => { b.className = 'px-4 py-2 rounded-full text-sm font-bold bg-white text-gray-600 hover:bg-slate-50 border border-gray-200'; });
+                btnElem.className = 'px-4 py-2 rounded-full text-sm font-bold bg-vibrant-blue text-white shadow';
+            } else {
+                const btns = document.querySelectorAll('#flashcard-level-filters button');
+                if(btns.length>0) {
+                    btns.forEach(b => b.className = 'px-4 py-2 rounded-full text-sm font-bold bg-white text-gray-600 hover:bg-slate-50 border border-gray-200');
+                    btns[0].className = 'px-4 py-2 rounded-full text-sm font-bold bg-vibrant-blue text-white shadow';
+                }
+            }
+
+            appState.fcFiltered = level ? appState.vocab.filter(v => v.level === level) : [...appState.vocab];
+            
+            // Randomize order
+            appState.fcFiltered.sort(() => Math.random() - 0.5);
+            appState.fcIndex = 0;
+            
+            if(appState.fcFiltered.length > 0) {
+                document.getElementById('flashcard-area').classList.remove('hidden-view');
+                document.getElementById('flashcard-empty').classList.add('hidden-view');
+                showCard(0);
+            } else {
+                document.getElementById('flashcard-area').classList.add('hidden-view');
+                document.getElementById('flashcard-empty').classList.remove('hidden-view');
+            }
+        }
+
+        function showCard(index) {
+            const card = appState.fcFiltered[index];
+            if(!card) return;
+            document.querySelector('.flip-card').classList.remove('flipped');
+            
+            document.getElementById('fc-current-num').innerText = index + 1;
+            document.getElementById('fc-total-num').innerText = appState.fcFiltered.length;
+            
+            document.getElementById('fc-word').innerText = card.word;
+            document.getElementById('fc-reading').innerText = card.reading || card.word;
+            document.getElementById('fc-badge-level').innerText = card.level || 'ทั่วไป';
+            document.getElementById('fc-badge-cat').innerText = card.category || 'ทั่วไป';
+            
+            const imgContainer = document.getElementById('fc-image-container');
+            if (card.image && card.image.startsWith('http')) {
+                document.getElementById('fc-image').src = card.image;
+                imgContainer.classList.remove('hidden');
+            } else {
+                imgContainer.classList.add('hidden');
+            }
+        }
+
+        window.nextCard = function() {
+            if(appState.fcFiltered.length === 0) return;
+            if(appState.fcIndex < appState.fcFiltered.length - 1) {
+                appState.fcIndex++;
+                showCard(appState.fcIndex);
+            } else {
+                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#06b6d4', '#ec4899', '#f59e0b'] });
+                Swal.fire({icon:'success', title:'เก่งมาก!', text:'คุณอ่านจบทุกคำในหมวดนี้แล้ว', confirmButtonColor: '#06b6d4'});
+            }
+        }
+        window.prevCard = function() {
+            if(appState.fcIndex > 0) {
+                appState.fcIndex--;
+                showCard(appState.fcIndex);
+            }
+        }
+
+        // Library (Data Table) logic
+        function updateLibraryFilters() {
+            const levels = [...new Set(appState.vocab.map(v => v.level).filter(Boolean))].sort();
+            const sel = document.getElementById('filter-level');
+            const oldVal = sel.value;
+            sel.innerHTML = '<option value="">-- ทุกระดับชั้น --</option>' + levels.map(l => `<option value="${escapeHTML(l)}">${escapeHTML(l)}</option>`).join('');
+            sel.value = levels.includes(oldVal) ? oldVal : '';
+        }
+
+        window.renderLibrary = function() {
+            const q = document.getElementById('search-vocab').value.toLowerCase();
+            const lvl = document.getElementById('filter-level').value;
+            
+            const list = appState.vocab.filter(v => {
+                const matchQ = (v.word||'').toLowerCase().includes(q) || (v.reading||'').toLowerCase().includes(q);
+                const matchLvl = !lvl || v.level === lvl;
+                return matchQ && matchLvl;
+            });
+
+            const tbody = document.getElementById('library-tbody');
+            tbody.innerHTML = list.length ? list.map((v, i) => {
+                const hasImg = v.image ? '<i class="fa-solid fa-image text-pink-400" title="มีรูปภาพ"></i>' : '';
+                const hasAud = v.audio ? '<i class="fa-solid fa-music text-blue-400" title="มีไฟล์เสียง"></i>' : '';
+                return `<tr>
+                    <td class="text-center text-gray-400 font-bold">${i+1}</td>
+                    <td class="text-center text-lg space-x-1">${hasImg}${hasAud}</td>
+                    <td class="font-bold text-gray-800 mali-font text-lg">${escapeHTML(v.word)}</td>
+                    <td class="text-vibrant-blue mali-font text-lg">${escapeHTML(v.reading)}</td>
+                    <td><span class="px-2 py-1 bg-yellow-50 text-yellow-700 rounded text-xs font-bold">${escapeHTML(v.level||'-')}</span></td>
+                    <td class="text-gray-500 text-xs">${escapeHTML(v.category||'-')}</td>
+                    <td class="text-center admin-only-block">
+                        <button onclick="editVocab('${escapeHTML(v.id)}')" class="w-8 h-8 rounded bg-blue-50 text-blue-500 hover:bg-blue-100 mx-1"><i class="fa-solid fa-pen text-xs"></i></button>
+                        <button onclick="deleteVocab('${escapeHTML(v.id)}')" class="w-8 h-8 rounded bg-red-50 text-red-500 hover:bg-red-100"><i class="fa-solid fa-trash text-xs"></i></button>
+                    </td>
+                </tr>`;
+            }).join('') : `<tr><td colspan="7" class="text-center py-10 text-gray-400">ไม่พบข้อมูล</td></tr>`;
+        }
+
+        window.renderDocs = function() {
+            const list = appState.docs || [];
+            const tbody = document.getElementById('docs-tbody');
+            tbody.innerHTML = list.length ? list.map((d, i) => `<tr>
+                <td class="text-center text-gray-400 font-bold">${i+1}</td>
+                <td class="font-bold text-gray-800">${escapeHTML(d.title)}</td>
+                <td class="text-gray-500 text-xs">${escapeHTML(d.description||'-')}</td>
+                <td class="text-center"><a href="${escapeHTML(d.url)}" target="_blank" class="px-3 py-1.5 rounded-lg bg-rose-50 text-rose-600 font-bold text-xs hover:bg-rose-100"><i class="fa-solid fa-download mr-1"></i> โหลด</a></td>
+                <td class="text-center admin-only-block">
+                    <button onclick="editDoc('${escapeHTML(d.id)}')" class="w-8 h-8 rounded bg-blue-50 text-blue-500 hover:bg-blue-100 mx-1"><i class="fa-solid fa-pen text-xs"></i></button>
+                    <button onclick="deleteDoc('${escapeHTML(d.id)}')" class="w-8 h-8 rounded bg-red-50 text-red-500 hover:bg-red-100"><i class="fa-solid fa-trash text-xs"></i></button>
+                </td>
+            </tr>`).join('') : `<tr><td colspan="5" class="text-center py-10 text-gray-400">ไม่มีเอกสาร</td></tr>`;
+        }
+
+        // CRUD Operations
+        window.openVocabForm = function() {
+            document.querySelector('#modal-vocab form').reset();
+            document.getElementById('v-id').value = '';
+            document.getElementById('v-image-old').value = '';
+            document.getElementById('v-audio-old').value = '';
+            openModal('modal-vocab');
+        }
+
+        window.editVocab = function(id) {
+            const item = appState.vocab.find(x => String(x.id) === String(id));
+            if(!item) return;
+            document.getElementById('v-id').value = item.id || '';
+            document.getElementById('v-word').value = item.word || '';
+            document.getElementById('v-reading').value = item.reading || '';
+            document.getElementById('v-level').value = item.level || '';
+            document.getElementById('v-category').value = item.category || '';
+            
+            document.getElementById('v-image-file').value = '';
+            document.getElementById('v-image-url').value = (item.image && item.image.startsWith('http')) ? item.image : '';
+            document.getElementById('v-image-old').value = item.image || '';
+
+            document.getElementById('v-audio-file').value = '';
+            document.getElementById('v-audio-url').value = (item.audio && item.audio.startsWith('http')) ? item.audio : '';
+            document.getElementById('v-audio-old').value = item.audio || '';
+            
+            openModal('modal-vocab');
+        }
+
+        window.handleSaveVocab = async function(e) {
+            e.preventDefault();
+            Swal.fire({title: 'กำลังบันทึกข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+            try {
+                let imgFile = document.getElementById('v-image-file').files[0];
+                let imgUrl = document.getElementById('v-image-url').value.trim();
+                let image = await processFile(imgFile) || imgUrl || document.getElementById('v-image-old').value;
+
+                let audFile = document.getElementById('v-audio-file').files[0];
+                let audUrl = document.getElementById('v-audio-url').value.trim();
+                let audio = await processFile(audFile) || audUrl || document.getElementById('v-audio-old').value;
+
+                const data = {
+                    id: document.getElementById('v-id').value,
+                    word: document.getElementById('v-word').value.trim(),
+                    reading: document.getElementById('v-reading').value.trim(),
+                    level: document.getElementById('v-level').value.trim(),
+                    category: document.getElementById('v-category').value.trim(),
+                    image: image,
+                    audio: audio
+                };
+
+                await api.saveVocab(data);
+                closeModal('modal-vocab');
+                await loadDataFromServer();
+                Swal.fire({icon: 'success', title: 'บันทึกสำเร็จ', timer: 1500, showConfirmButton: false});
+            } catch(err) {
+                Swal.fire('ข้อผิดพลาด', err.message, 'error');
+            }
+        }
+
+        window.deleteVocab = function(id) {
+            Swal.fire({title: 'ยืนยันการลบ?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'ลบเลย'}).then(async (r) => {
+                if(r.isConfirmed) {
+                    Swal.fire({title: 'กำลังลบ...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+                    try {
+                        await api.deleteVocab(id);
+                        await loadDataFromServer();
+                        Swal.fire({icon: 'success', title: 'ลบสำเร็จ', timer: 1500, showConfirmButton: false});
+                    } catch(e) { Swal.fire('ข้อผิดพลาด', e.message, 'error'); }
+                }
+            });
+        }
+
+        // Bulk Import
+        window.handleImport = async function(e) {
+            e.preventDefault();
+            const text = document.getElementById('import-data').value.trim();
+            if(!text) return;
+            
+            const lines = text.split('\n');
+            const list = [];
+            lines.forEach(line => {
+                const cols = line.split('\t');
+                if(cols.length >= 1 && cols[0].trim() !== '') {
+                    list.push({
+                        word: cols[0]?.trim() || '',
+                        reading: cols[1]?.trim() || cols[0]?.trim() || '',
+                        level: cols[2]?.trim() || '',
+                        category: cols[3]?.trim() || ''
+                    });
+                }
+            });
+
+            if(list.length === 0) return Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณาตรวจสอบรูปแบบการคัดลอกจากตาราง', 'warning');
+
+            Swal.fire({title: 'กำลังนำเข้าข้อมูล...', text: `จำนวน ${list.length} คำ`, allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+            try {
+                await api.importVocab(list);
+                closeModal('modal-import');
+                await loadDataFromServer();
+                Swal.fire({icon: 'success', title: 'นำเข้าสำเร็จ', timer: 1500, showConfirmButton: false});
+            } catch(err) {
+                Swal.fire('ข้อผิดพลาด', err.message, 'error');
+            }
+        }
+
+        // Doc CRUD
+        window.openDocForm = function() {
+            document.querySelector('#modal-doc form').reset();
+            document.getElementById('d-id').value = '';
+            document.getElementById('d-old-url').value = '';
+            openModal('modal-doc');
+        }
+        window.editDoc = function(id) {
+            const item = appState.docs.find(x => String(x.id) === String(id));
+            if(!item) return;
+            document.getElementById('d-id').value = item.id;
+            document.getElementById('d-title').value = item.title;
+            document.getElementById('d-desc').value = item.description || '';
+            document.getElementById('d-file').value = '';
+            document.getElementById('d-url').value = (item.url && item.url.startsWith('http')) ? item.url : '';
+            document.getElementById('d-old-url').value = item.url || '';
+            openModal('modal-doc');
+        }
+        window.handleSaveDoc = async function(e) {
+            e.preventDefault();
+            Swal.fire({title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+            try {
+                let file = document.getElementById('d-file').files[0];
+                let urlInp = document.getElementById('d-url').value.trim();
+                let url = await processFile(file) || urlInp || document.getElementById('d-old-url').value;
+                if(!url) throw new Error('กรุณาแนบไฟล์หรือใส่ลิงก์ดาวน์โหลด');
+
+                await api.saveDoc({
+                    id: document.getElementById('d-id').value,
+                    title: document.getElementById('d-title').value.trim(),
+                    description: document.getElementById('d-desc').value.trim(),
+                    url: url
+                });
+                closeModal('modal-doc');
+                await loadDataFromServer();
+                Swal.fire({icon: 'success', title: 'บันทึกสำเร็จ', timer: 1500, showConfirmButton: false});
+            } catch(err) { Swal.fire('ข้อผิดพลาด', err.message, 'error'); }
+        }
+        window.deleteDoc = function(id) {
+            Swal.fire({title: 'ยืนยันการลบเอกสาร?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'ลบ'}).then(async (r) => {
+                if(r.isConfirmed) {
+                    Swal.fire({title: 'กำลังลบ...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+                    try {
+                        await api.deleteDoc(id);
+                        await loadDataFromServer();
+                        Swal.fire({icon: 'success', title: 'ลบสำเร็จ', timer: 1500, showConfirmButton: false});
+                    } catch(e) { Swal.fire('ข้อผิดพลาด', e.message, 'error'); }
+                }
+            });
+        }
+
+        // Settings
+        window.handleSaveSettings = async function(e) {
+            e.preventDefault();
+            Swal.fire({title: 'กำลังบันทึกตั้งค่า...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+            try {
+                const data = {
+                    schoolName: document.getElementById('set-schoolName').value.trim(),
+                    footerSubtext: document.getElementById('set-footerSubtext').value.trim()
+                };
+                await api.saveSettings(data);
+                await loadDataFromServer();
+                Swal.fire({icon: 'success', title: 'อัปเดตระบบแล้ว', timer: 1500, showConfirmButton: false});
+            } catch(err) { Swal.fire('ข้อผิดพลาด', err.message, 'error'); }
+        }
+
+        // Fetch Initial Data
+        async function loadDataFromServer() {
+            try {
+                const data = await api.init();
+                appState.vocab = data.vocab || [];
+                appState.docs = data.downloads || [];
+                appState.settings = data.settings || {};
+                
+                applySettings();
+                updateLibraryFilters();
+                
+                // Refresh current view if needed
+                const activeViews = document.querySelectorAll('main > div:not(.hidden-view)');
+                if (activeViews.length > 0) {
+                    const viewId = activeViews[0].id.replace('view-', '');
+                    switchTab(viewId);
+                } else {
+                    switchTab('home');
+                }
+            } catch (error) {
+                console.error(error);
+                Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อกับฐานข้อมูลได้ กรุณาตรวจสอบ URL ของ Web App', 'error');
+            }
+        }
+
+        async function initApp() {
+            try {
+                await loadDataFromServer();
+                const visit = await api.recordVisit();
+                document.getElementById('visit-today').innerText = Number(visit.today || 0).toLocaleString('th-TH');
+                document.getElementById('visit-total').innerText = Number(visit.total || 0).toLocaleString('th-TH');
+                document.getElementById('global-loading').classList.add('hidden-view');
+            } catch(e) {
+                document.getElementById('global-loading').innerHTML = `<p class="text-red-500 font-bold">เกิดข้อผิดพลาดในการโหลดข้อมูล<br><span class="text-xs font-normal">กรุณาตรวจสอบ SCRIPT_URL ในโค้ดว่าถูกต้องและตรงกับ Web App URL หรือไม่</span></p>`;
+            }
+        }
+
+        window.onload = initApp;
+
+    </script>
+</body>
+</html>
